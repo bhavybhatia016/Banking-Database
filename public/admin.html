@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ABS Bank Admin Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 20px;
+      background: linear-gradient(to right, #3b82f6, #06b6d4);
+      color: #fff;
+    }
+    .heading {
+      text-align: center;
+      font-size: 2em;
+      margin-bottom: 30px;
+    }
+    .card-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: #fff;
+      color: #333;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      padding: 30px;
+      width: 220px;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      background: #fff;
+      color: #333;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    th {
+      background: #06b6d4;
+      color: white;
+    }
+    .delete-btn {
+      background: crimson;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="heading">ABS Bank - Admin Control Panel</h1>
+  <div class="card-container">
+    <div class="card">
+      <h3>Total Customers</h3>
+      <p id="customer-count">Loading...</p>
+    </div>
+    <div class="card">
+      <h3>Total Employees</h3>
+      <p id="employee-count">Loading...</p>
+    </div>
+    <div class="card">
+      <h3>Total Bank Balance</h3>
+      <p id="bank-balance">Loading...</p>
+    </div>
+  </div>
+
+  <h2>Customers</h2>
+  <table id="customer-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Mobile</th>
+        <th>House No</th>
+        <th>City</th>
+        <th>Zipcode</th>
+        <th>Balance</th>
+        <th>Loan</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Employees</h2>
+  <table id="employee-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Loan History</h2>
+  <table id="loan-table">
+    <thead>
+      <tr>
+        <th>Loan ID</th>
+        <th>Customer ID</th>
+        <th>Type</th>
+        <th>Amount (₹)</th>
+        <th>Duration (mo)</th>
+        <th>Status</th>
+        <th>Outstanding (₹)</th>
+        <th>Applied At</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const customerCountEl = document.getElementById("customer-count");
+    const employeeCountEl = document.getElementById("employee-count");
+    const bankBalanceEl = document.getElementById("bank-balance");
+    const customerTable = document.querySelector("#customer-table tbody");
+    const employeeTable = document.querySelector("#employee-table tbody");
+    const loanTable = document.querySelector("#loan-table tbody");
+
+    async function loadDashboard() {
+      try {
+        const [customersRes, countRes, balanceRes, empRes] = await Promise.all([
+          fetch('/api/admin/customers'),
+          fetch('/api/customers/count'),
+          fetch('/api/customers/total-balance'),
+          fetch('/api/employees')
+        ]);
+
+        const customers = await customersRes.json();
+        const countData = await countRes.json();
+        const balanceData = await balanceRes.json();
+        const employees = await empRes.json();
+
+        customerCountEl.textContent = countData.totalCustomers;
+        bankBalanceEl.textContent = `₹${Number(balanceData.totalBalance).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+        employeeCountEl.textContent = employees.length;
+
+        customerTable.innerHTML = "";
+        customers.forEach(c => {
+          customerTable.innerHTML += `
+            <tr>
+              <td>${c.customer_id}</td>
+              <td>${c.name}</td>
+              <td>${c.email}</td>
+              <td>${c.phone}</td>
+              <td>${c.house_no}</td>
+              <td>${c.city}</td>
+              <td>${c.zipcode}</td>
+              <td>₹${Number(c.balance).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+              <td>₹${Number(c.loan).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+              <td><button class="delete-btn" onclick="deleteCustomer(${c.customer_id})">Delete</button></td>
+            </tr>
+          `;
+        });
+
+        employeeTable.innerHTML = "";
+        employees.forEach(emp => {
+          employeeTable.innerHTML += `
+            <tr>
+              <td>${emp.employee_id}</td>
+              <td>${emp.username}</td>
+              <td><button class="delete-btn" onclick="deleteEmployee(${emp.employee_id})">Delete</button></td>
+            </tr>
+          `;
+        });
+
+      } catch (err) {
+        alert("Failed to load dashboard data. See console.");
+        console.error(err);
+      }
+    }
+
+    async function loadLoanHistory() {
+      try {
+        const res = await fetch('/api/admin/loans');
+        const loans = await res.json();
+        loanTable.innerHTML = "";
+        loans.forEach(loan => {
+          loanTable.innerHTML += `
+            <tr>
+              <td>${loan.loan_id}</td>
+              <td>${loan.customer_id}</td>
+              <td>${loan.loan_type}</td>
+              <td>₹${Number(loan.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+              <td>${loan.duration_months}</td>
+              <td>${loan.status}</td>
+              <td>₹${Number(loan.outstanding_amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+              <td>${loan.applied_at ? new Date(loan.applied_at).toLocaleString('en-IN') : ''}</td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        loanTable.innerHTML = `<tr><td colspan="8" style="color:crimson;">Failed to load loan history.</td></tr>`;
+        console.error(err);
+      }
+    }
+
+    async function deleteCustomer(id) {
+      if (confirm("Delete this customer?")) {
+        await fetch(`/api/customers/${id}`, { method: "DELETE" });
+        loadDashboard();
+        loadLoanHistory();
+      }
+    }
+
+    async function deleteEmployee(id) {
+      if (confirm("Delete this employee?")) {
+        await fetch(`/api/employees/${id}`, { method: "DELETE" });
+        loadDashboard();
+      }
+    }
+
+    loadDashboard();
+    loadLoanHistory();
+  </script>
+</body>
+</html>

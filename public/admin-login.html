@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ABS Bank - Admin Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">ABS Bank</div>
+    <div class="nav-buttons">
+      <a href="index.html"><button class="home-btn">Home</button></a>
+    </div>
+  </header>
+
+  <section class="hero" style="text-align: center;">
+    <div class="hero-text">
+      <h2 class="section-heading center-heading">Admin Login</h2>
+      <form id="admin-login-form" class="form-container" style="max-width: 500px; margin: 0 auto;">
+        <label>Admin ID:</label>
+        <input type="text" id="admin-id" placeholder="Enter Admin ID" required />
+
+        <label>Password:</label>
+        <input type="password" id="admin-password" placeholder="Enter Password" required />
+
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 ABS Bank. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.getElementById('admin-login-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const adminId = document.getElementById('admin-id').value;
+      const password = document.getElementById('admin-password').value;
+
+      
+      if (adminId === 'admin' && password === 'admin') {
+        
+        window.location.href = 'admin.html';
+      } else {
+        alert('Invalid admin credentials!');
+      }
+    });
+  </script>
+
+</body>
+</html>

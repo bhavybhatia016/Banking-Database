@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ABS Bank - Customer Register</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">ABS Bank</div>
+    <div class="nav-buttons">
+      <a href="index.html"><button class="home-btn">Home</button></a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <h2>Customer Registration</h2>
+      <form class="form-container" id="registerForm" onsubmit="registerCustomer(event)">
+        <input type="text" id="name" placeholder="Full Name" required />
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Create Password" required />
+        <input type="text" id="mobile" placeholder="Mobile Number" required />
+        <select id="account_type" required>
+          <option value="">Select Account Type</option>
+          <option value="Savings">Savings</option>
+          <option value="Checking">Checking</option>
+        </select>
+        <input type="number" id="balance" placeholder="Initial Deposit" min="0" step="0.01" required />
+        <button type="submit">Register</button>
+      </form>
+      <p>Already have an account? <a href="customer-login.html">Login here</a></p>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 ABS Bank. All rights reserved.</p>
+  </footer>
+
+  <script>
+    async function registerCustomer(event) {
+      event.preventDefault();
+
+      const body = {
+        name: document.getElementById("name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+        mobile: document.getElementById("mobile").value.trim(),
+        account_type: document.getElementById("account_type").value,
+        balance: document.getElementById("balance").value
+      };
+
+      if (!body.name || !body.email || !body.password || !body.mobile || !body.account_type || !body.balance) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:3000/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const result = await res.json();
+        alert(result.message);
+
+        if (res.ok) window.location.href = 'customer-login.html';
+      } catch (err) {
+        alert('Registration failed. Please try again.');
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ABS Bank - Customer Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">ABS Bank</div>
+    <div class="nav-buttons">
+      <a href="index.html"><button class="home-btn">Home</button></a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <h2>Customer Login</h2>
+      <form class="form-container" id="loginForm" onsubmit="loginCustomer(event)">
+        <input type="text" id="login-identifier" placeholder="Customer ID or Email" required />
+        <input type="password" id="login-password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <p id="register-link">Don't have an account? <a href="customer-register.html">Register here</a></p>
+
+      <!-- Customer Details Section (hidden until login) -->
+      <div id="customer-details" style="display:none; margin-top:2em;">
+        <h3>Your Details</h3>
+        <ul id="details-list" style="list-style:none; padding:0;"></ul>
+        <!-- Loan button, visible after login -->
+        <button id="loan-btn" style="margin-top:20px;">Go to Loan Section</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 ABS Bank. All rights reserved.</p>
+  </footer>
+  <script>
+    let loggedInCustomerId = null;
+
+    async function loginCustomer(event) {
+      event.preventDefault();
+      const identifier = document.getElementById('login-identifier').value.trim();
+      const password = document.getElementById('login-password').value;
+      const body = {
+        identifier,
+        password
+      };
+      const res = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const result = await res.json();
+      alert(result.message);
+      if (res.ok) {
+        loggedInCustomerId = result.customer_id;
+        // Hide login form and register link
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('register-link').style.display = 'none';
+        // Show customer details and loan button
+        fetchCustomerDetails(loggedInCustomerId);
+      }
+    }
+
+    async function fetchCustomerDetails(customerId) {
+      const res = await fetch(`http://localhost:3000/api/customers/${customerId}`);
+      if (res.ok) {
+        const customer = await res.json();
+        const details = [
+          `<strong>Name:</strong> ${customer.name}`,
+          `<strong>Email:</strong> ${customer.email}`,
+          `<strong>Account Type:</strong> ${customer.account_type}`,
+          `<strong>Balance:</strong> ₹${customer.balance}`,
+          `<strong>Phone:</strong> ${customer.phone || ''}`
+        ];
+        document.getElementById('details-list').innerHTML = details.map(d => `<li>${d}</li>`).join('');
+        document.getElementById('customer-details').style.display = 'block';
+        document.getElementById('loan-btn').onclick = function() {
+          // Optionally pass customer_id via query string or session
+          window.location.href = `customer-loan.html?customer_id=${customer.customer_id}`;
+        };
+      }
+    }
+  </script>
+</body>
+</html>

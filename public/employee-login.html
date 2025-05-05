@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ABS Bank - Employee Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">ABS Bank</div>
+    <div class="nav-buttons">
+      <a href="index.html"><button class="home-btn">Home</button></a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <h2 class="section-heading center-heading">Employee Login</h2>
+      <form class="form-container" onsubmit="loginEmployee(event)">
+        <input type="text" id="employee-id" placeholder="Employee ID" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <p>Not registered? <a href="employee-register.html">Sign up here</a></p>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 ABS Bank. All rights reserved.</p>
+  </footer>
+
+  <script>
+    
+    async function loginEmployee(event) {
+      event.preventDefault();
+
+      const employeeId = document.getElementById('employee-id').value;
+      const password = document.getElementById('password').value;
+
+  
+      const response = await fetch('http://localhost:3000/api/employee/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ employee_id: employeeId, password: password }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert(result.message);
+        
+        window.location.href = 'employee-dashboard.html';
+      } else {
+        alert(result.message || 'Login failed. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>

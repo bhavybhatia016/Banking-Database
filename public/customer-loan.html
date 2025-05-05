@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ABS Bank - Loan Application</title>
+  <style>
+    body {
+      background: #f6f9fb;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 16px #e3e7ed;
+      padding: 32px;
+    }
+    h2 {
+      color: #0072ff;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    .loan-form label {
+      display: block;
+      margin-bottom: 7px;
+      margin-top: 16px;
+      font-weight: 500;
+      color: #333;
+    }
+    .loan-form input, .loan-form select {
+      width: 100%;
+      padding: 9px;
+      border-radius: 4px;
+      border: 1px solid #b5c9d6;
+      margin-bottom: 8px;
+      font-size: 15px;
+      background: #f8fbfd;
+      transition: border-color 0.2s;
+    }
+    .loan-form input:focus, .loan-form select:focus {
+      border-color: #0072ff;
+      outline: none;
+    }
+    .loan-form button {
+      background: linear-gradient(90deg, #0072ff, #00c6ff);
+      color: #fff;
+      border: none;
+      padding: 12px 0;
+      width: 100%;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .loan-form button:hover {
+      background: linear-gradient(90deg, #005bb5, #0099cc);
+    }
+    .summary {
+      margin-bottom: 12px;
+      font-size: 17px;
+      color: #333;
+      text-align: center;
+    }
+    .home-btn {
+      margin-bottom: 16px;
+      background: #fff;
+      color: #0072ff;
+      border: 2px solid #0072ff;
+      border-radius: 4px;
+      padding: 8px 20px;
+      font-weight: bold;
+      cursor: pointer;
+      float: right;
+      transition: background 0.2s, color 0.2s;
+    }
+    .home-btn:hover {
+      background: #0072ff;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="home-btn" onclick="location.href='index.html'">Home</button>
+    <h2>Loan Application</h2>
+    <div class="summary">
+      <span id="customerName"></span> | Balance: <span id="customerBalance"></span>
+    </div>
+    <form class="loan-form" id="loanForm">
+      <label for="loanType">Loan Type</label>
+      <select id="loanType" required>
+        <option value="">Select Type</option>
+        <option value="Home Loan">Home Loan</option>
+        <option value="Personal Loan">Personal Loan</option>
+        <option value="Auto Loan">Auto Loan</option>
+        <option value="Education Loan">Education Loan</option>
+      </select>
+
+      <label for="loanAmount">Amount (₹)</label>
+      <input type="number" id="loanAmount" min="1000" max="10000000" placeholder="Enter amount (max 1 crore)" required />
+
+      <label for="loanDuration">Duration (months)</label>
+      <input type="number" id="loanDuration" min="1" max="360" placeholder="e.g. 12" required />
+
+      <button type="submit">Apply for Loan</button>
+    </form>
+  </div>
+
+  <script>
+    // Get customer_id from URL (e.g., customer-loan.html?customer_id=1)
+    function getCustomerId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('customer_id');
+    }
+
+    const customerId = getCustomerId();
+
+    async function fetchCustomerDetails() {
+      if (!customerId) {
+        alert('Customer ID missing in URL!');
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:3000/api/customers/${customerId}`);
+        if (!res.ok) throw new Error('Failed to fetch customer details');
+        const customer = await res.json();
+        document.getElementById('customerName').textContent = customer.name;
+        document.getElementById('customerBalance').textContent = `₹${parseFloat(customer.balance).toLocaleString()}`;
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    document.getElementById('loanForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      if (!customerId) {
+        alert('Customer ID missing!');
+        return;
+      }
+
+      const loan_type = document.getElementById('loanType').value;
+      const amount = document.getElementById('loanAmount').value;
+      const duration_months = document.getElementById('loanDuration').value;
+
+      if (!loan_type || !amount || !duration_months) {
+        alert('Please fill all fields.');
+        return;
+      }
+
+      if (parseFloat(amount) > 10000000) {
+        alert('Loan amount cannot exceed ₹1 crore (10,000,000)');
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:3000/api/loans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customer_id: customerId, loan_type, amount, duration_months })
+        });
+
+        const result = await res.json();
+
+        alert(result.message);
+
+        if (res.ok) {
+          document.getElementById('loanForm').reset();
+        }
+      } catch (error) {
+        alert('Failed to submit loan application.');
+        console.error(error);
+      }
+    });
+
+    // Fetch customer details on page load
+    fetchCustomerDetails();
+  </script>
+</body>
+</html>
